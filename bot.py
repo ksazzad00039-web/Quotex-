@@ -1,5 +1,5 @@
 # ==============================================================================
-# QUOTEX OTC ULTRA-ENTERPRISE QUANTITATIVE ALGORITHMIC RESEARCH BOT (v6.0 PHD EDITION)
+# QUOTEX OTC ULTRA-ENTERPRISE QUANTITATIVE ALGORITHMIC RESEARCH BOT (v6.1 PHD EDITION)
 # ==============================================================================
 
 import os
@@ -194,7 +194,7 @@ def extract_clean_json_from_ai_response(raw_text: str) -> Optional[Dict[str, Any
     if not raw_text:
         return None
     cleaned = raw_text.strip()
-    cleaned = re.sub(r"^```(?:json)?", "", cleaned, flags=rc := re.IGNORECASE)
+    cleaned = re.sub(r"^```(?:json)?", "", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"```$", "", cleaned).strip()
     
     try:
@@ -423,7 +423,7 @@ async def fetch_enterprise_statistics() -> Dict[str, Any]:
 async def cmd_start(message: Message):
     await log_audit_event(message.from_user.id, "command_start", "/start invoked")
     welcome_text = """
-🤖 **QUOTEX OTC QUANTITATIVE RESEARCH BOT (v6.0 PHD EDITION)**
+🤖 **QUOTEX OTC QUANTITATIVE RESEARCH BOT (v6.1 PHD EDITION)**
 
 Engineered with elite institutional depth to scan **Quotex synthetic price feeds, multi-candle momentum waves (5-7 candles), algorithmic loops, and broker manipulation traps**.
 
@@ -473,7 +473,7 @@ async def cmd_status(message: Message):
         f"• Telegram Dispatcher: ACTIVE (Long-Polling Engine)\n"
         f"• Vision Model: `{GEMINI_MODEL}`\n"
         f"• Database Engine: {db_health}\n"
-        f"• Core Architecture: Quotex Algorithmic Forensic Suite v6\n"
+        f"• Core Architecture: Quotex Algorithmic Forensic Suite v6.1\n"
         f"• UTC Timestamp: {get_current_utc_iso()}"
     )
     await message.answer(status_report)
@@ -742,7 +742,7 @@ async def global_dispatcher_error_handler(event):
 async def run_telegram_bot():
     initialize_enterprise_database()
     logger.info("==================================================")
-    logger.info("Quotex OTC Quantitative Research Bot Initialized (v6.0)")
+    logger.info("Quotex OTC Quantitative Research Bot Initialized (v6.1)")
     logger.info("Configured Gemini Model: %s", GEMINI_MODEL)
     logger.info("Active Database Target: %s", DB_FILE)
     logger.info("==================================================")
