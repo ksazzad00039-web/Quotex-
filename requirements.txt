@@ -1,5 +1,12 @@
-aiogram
-google-genai
+pip install
+aiogram 
 python-dotenv
-fastapi
-uvicorn
+google-genai 
+fastapi 
+uvicorn 
+numpy 
+pandas
+encv-python 
+pillow 
+pytesseract 
+scipy
