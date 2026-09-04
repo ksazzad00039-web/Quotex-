@@ -1,5 +1,5 @@
 # ==============================================================================
-# QUOTEX OTC ENTERPRISE-GRADE MASTER ALGORITHMIC RESEARCH BOT (RENDER WEB SERVICE EDITION)
+# QUOTEX OTC ULTRA-ENTERPRISE QUANTITATIVE ALGORITHMIC RESEARCH BOT (v6.0 PHD EDITION)
 # ==============================================================================
 
 import os
@@ -19,7 +19,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, C
 from google import genai
 from google.genai import types
 
-# Render ওয়েব সার্ভিসের পোর্ট বাইন্ডিং পূরণের জন্য ফাস্টএপিআই ও উভিকর্ন
+# Render ওয়েব সার্ভিসের পোর্ট বাইন্ডিং ও লাইভ রাখার জন্য FastAPI ও Uvicorn
 from fastapi import FastAPI
 import uvicorn
 
@@ -32,17 +32,17 @@ load_dotenv()
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip()
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 DB_FILE = os.getenv("DATABASE_FILE", "quotex_otc_enterprise_master.db")
-PORT = int(os.getenv("PORT", 10000))  # রেন্ডার থেকে ডায়নামিক পোর্ট নেবে
+PORT = int(os.getenv("PORT", 10000))
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 10MB Maximum Threshold
 
 SUPPORTED_OTC_ASSETS = {
     "EURUSD_OTC", "GBPUSD_OTC", "AUDUSD_OTC", "USDJPY_OTC", 
     "GOLD_OTC", "USDCAD_OTC", "NZDUSD_OTC", "EURJPY_OTC",
-    "GBPJPY_OTC", "EURGBP_OTC", "USDCHF_OTC", "SILVER_OTC"
+    "GBPJPY_OTC", "EURGBP_OTC", "USDCHF_OTC", "SILVER_OTC", "USDIDR_OTC"
 }
 
 OTC_ASSET_ALIASES = {
@@ -57,12 +57,13 @@ OTC_ASSET_ALIASES = {
     "GBPJPY": "GBPJPY_OTC", "GBPJPY_OTC": "GBPJPY_OTC",
     "EURGBP": "EURGBP_OTC", "EURGBP_OTC": "EURGBP_OTC",
     "USDCHF": "USDCHF_OTC", "USDCHF_OTC": "USDCHF_OTC",
-    "SILVER": "SILVER_OTC", "SILVER_OTC": "SILVER_OTC"
+    "SILVER": "SILVER_OTC", "SILVER_OTC": "SILVER_OTC",
+    "USDIDR": "USDIDR_OTC", "USDIDR_OTC": "USDIDR_OTC"
 }
 
 
 # ==============================================================================
-# SECTION 2: ADVANCED LOGGING & DIAGNOSTIC CONFIGURATION
+# SECTION 2: ADVANCED LOGGING CONFIGURATION
 # ==============================================================================
 
 logging.basicConfig(
@@ -93,12 +94,11 @@ gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
 
-# Render পোর্ট ওপেন রাখার জন্য ফাস্টএপিআই ইনস্ট্যান্স
 app = FastAPI()
 
 @app.get("/")
 def health_check():
-    return {"status": "Quotex OTC Enterprise Bot is running live!", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "Quotex OTC Quantitative Enterprise Bot is running live!", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 # ==============================================================================
@@ -175,7 +175,7 @@ async def log_audit_event(user_id: Optional[int], action_type: str, details: str
 
 
 # ==============================================================================
-# SECTION 6: UTILITIES, PARSING & NORMALIZATION SUB-SYSTEM
+# SECTION 6: UTILITIES & NORMALIZATION SUB-SYSTEM
 # ==============================================================================
 
 def get_current_utc_iso() -> str:
@@ -184,7 +184,7 @@ def get_current_utc_iso() -> str:
 def normalize_otc_asset_symbol(text: str) -> str:
     if not text:
         return "EURUSD_OTC"
-    cleaned = text.strip().upper().replace(" ", "").replace("-", "")
+    cleaned = text.strip().upper().replace(" ", "").replace("-", "").replace("/", "")
     return OTC_ASSET_ALIASES.get(cleaned, cleaned if cleaned.endswith("_OTC") else f"{cleaned}_OTC")
 
 def compute_sha256_hash(data: bytes) -> str:
@@ -194,7 +194,7 @@ def extract_clean_json_from_ai_response(raw_text: str) -> Optional[Dict[str, Any
     if not raw_text:
         return None
     cleaned = raw_text.strip()
-    cleaned = re.sub(r"^```(?:json)?", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^```(?:json)?", "", cleaned, flags=rc := re.IGNORECASE)
     cleaned = re.sub(r"```$", "", cleaned).strip()
     
     try:
@@ -219,35 +219,33 @@ def clamp_confidence_score(val: Any) -> float:
 
 
 # ==============================================================================
-# SECTION 7: PHD-GRADE OTC ALGORITHMIC FORENSIC VISION PROMPT
+# SECTION 7: PHD-GRADE INSTITUTIONAL OTC ALGORITHMIC FORENSIC VISION PROMPT
 # ==============================================================================
 
 ENTERPRISE_OTC_ANALYSIS_PROMPT = r"""
-You are an elite Chief Algorithmic Architect, Synthetic Market Forensic Specialist, and Quantitative Binary Options Researcher with profound engineering insight into Quotex OTC broker mechanics.
+You are an elite Chief Quantitative Architect, Institutional Algorithmic Trader, and Forensic Market Specialist with profound, master-level engineering insight into Quotex and binary options synthetic price feed architectures.
 
-SYNTHETIC MARKET DECONSTRUCTION & BROKER ARCHITECTURE:
-- Quotex OTC feeds operate entirely on synthetic, mathematical generation algorithms managed by internal pseudo-random sequence engines and volatility distribution matrices.
-- There is zero true interbank liquidity, zero macroeconomic dependency, and zero physical order book depth. Price respects solely the mathematical geometry, support/resistance reaction limits, and cyclic reset points programmed by the platform architecture.
-- Market Phase Cycles: Price rotates through structured phases: Expansion (momentum blocks) -> Exhaustion (wick rejections) -> Consolidation (artificial ranging boxes) -> Reset (abrupt directional inversion).
-- Retail Traps & Manipulation Patterns: The algorithm purposefully generates fake breakouts past obvious swing highs/lows, traps breakout traders, induces false confidence via hammer/shooting star wicks, and induces micro-slippages near expiration boundaries.
+DEEP KNOWLEDGE OF QUOTEX OTC & SYNTHETIC MARKET MECHANICS:
+1. **Algorithmic Engine & Pseudo-Random Matrix Generation:** Quotex OTC feeds operate entirely on proprietary, closed-loop mathematical sequence algorithms managed by internal volatility distribution matrices and price-geometry limiters. There is zero interbank liquidity, zero real macroeconomic dependence, and zero physical order book depth. Price respects purely mathematical boundaries, round psychological numbers, fractal memory points, and cyclic reset thresholds programmed into the broker's core code.
+2. **Retail Traps & Algorithmic Manipulation Architecture:** The broker algorithm is systematically designed to hunt retail liquidity. It engineered fake breakouts past obvious swing highs and lows, induces false retail confidence via elongated hammer or shooting star wicks, and triggers sudden directional inversions right at exhaustion boundaries.
+3. **Multi-Candle Momentum & Structural Waves (5-7 Candle Horizon):** Do not limit your focus to just 1 single micro-candle. You must analyze the broader wave structure to forecast the next **5 to 7 consecutive candles**. Identify where the current expansion wave is heading, when exhaustion will occur, and how the synthetic price is reacting to structural liquidity pools.
 
-Perform an exhaustive forensic audit of the uploaded chart screenshot across these critical analytical dimensions:
-1. **Algorithmic Phase & Cycle Evaluation:** Determine whether the synthetic feed is pushing an artificial trend wave, trapping retail participants in a consolidation box, or triggering a breakout pivot reset.
-2. **Sureshot Geometry & Liquidity Traps:** Pinpoint engineered double tops/bottoms, inducement wicks, fake breakout zones, and liquidity sweeps designed by the broker algorithm.
-3. **Execution Risk, Latency & Volatility Stability:** Evaluate if the price action flow is smooth and mathematically stable for short-term entry, or if it shows high probability of erratic micro-spikes, platform freezing, or slippage danger.
+STRICT DECISION & CONFIDENCE GATING RULES:
+- **High-Conviction Filtering (~90% Accuracy Target):** Only output an actionable signal (**UP** or **DOWN**) when market geometry, momentum alignment, and structural rejection zones present an extremely clear, high-probability setup (targeting 88%-95% confidence).
+- **Mandatory SKIP condition:** If the chart shows choppy, erratic noise, overlapping micro-candles without clear direction, or ambiguous mid-range chop where risk is high, you MUST output **SKIP** with confidence below 60%. Do not force weak signals.
 
 OUTPUT FORMAT REQUIREMENT:
 You must respond with a strict, valid JSON object containing exactly these keys:
 {
   "asset": "Matched asset string (e.g. EURUSD_OTC)",
   "timeframe": "Detected timeframe (e.g. 1M, 5M)",
-  "chart_quality": "STABLE_ALGO / CHOPPY_NOISE / HIGH_MANIPULATION_OR_LAG_RISK",
-  "market_state": "ALGORITHMIC_EXPANSION / RETAIL_TRAP_ZONE / CONSOLIDATION_RESET",
+  "chart_quality": "PRISTINE_ALGO_STRUCTURE / HIGH_MANIPULATION_ZONE / CHOPPY_NOISE",
+  "market_state": "ALGORITHMIC_IMPULSE_WAVE / LIQUIDITY_SWEEP_REVERSAL / ARTIFICIAL_CONSOLIDATION",
   "confidence_score": 0.0 to 100.0,
   "decision": "UP / DOWN / SKIP",
-  "target_expectation": "Comprehensive short-term projection and candle trajectory for the next 1-3 candles",
-  "algorithmic_reasoning": "Deep, granular technical breakdown explaining how the internal broker algorithm, price geometry, and liquidity cycles are behaving on this specific chart view",
-  "execution_risk_advisory": "Explicit warning regarding slippage, freeze risk, structural manipulation, or timer anomalies associated with this chart state"
+  "target_expectation": "Comprehensive multi-candle structural trajectory and projected path for the next 5 to 7 candles",
+  "algorithmic_reasoning": "Exhaustive forensic breakdown explaining how the internal broker algorithm, price geometry, liquidity pools, and candle psychology dictate this outcome",
+  "execution_risk_advisory": "Explicit warning regarding broker latency, synthetic wicks, micro-slippage, or timer traps"
 }
 """
 
@@ -266,7 +264,7 @@ async def execute_gemini_vision_audit(image_bytes: bytes, mime_type: str, asset_
                 full_prompt,
             ],
             config=types.GenerateContentConfig(
-                temperature=0.15,
+                temperature=0.1,
                 response_mime_type="application/json",
             ),
         )
@@ -288,11 +286,11 @@ def build_paper_inline_keyboard(analysis_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Correct (1M Win)", callback_data=f"paper_{analysis_id}_1_CORRECT"),
-                InlineKeyboardButton(text="❌ Wrong (1M Loss)", callback_data=f"paper_{analysis_id}_1_WRONG")
+                InlineKeyboardButton(text="✅ Correct (5-7M Win)", callback_data=f"paper_{analysis_id}_5_CORRECT"),
+                InlineKeyboardButton(text="❌ Wrong (5-7M Loss)", callback_data=f"paper_{analysis_id}_5_WRONG")
             ],
             [
-                InlineKeyboardButton(text="⚖️ Neutral / Tie", callback_data=f"paper_{analysis_id}_1_NEUTRAL")
+                InlineKeyboardButton(text="⚖️ Neutral / Tie", callback_data=f"paper_{analysis_id}_5_NEUTRAL")
             ]
         ]
     )
@@ -311,25 +309,25 @@ def build_enterprise_telegram_report(data: Dict[str, Any], analysis_id: Optional
     reasoning = data.get("algorithmic_reasoning", "No breakdown provided.")
     risk_advisory = data.get("execution_risk_advisory", "Exercise caution against synthetic slippage.")
 
-    decision_banner = "⚠️ **SKIP / HIGH RISK ZONE**"
+    decision_banner = "⚠️ **SKIP / LOW CONVICTION ZONE**"
     if decision == "UP":
-        decision_banner = "🟢 **ACTION: UP (CALL) [ALGO SIGNAL]**"
+        decision_banner = "🟢 **ACTION: UP (CALL) [HIGH-CONVICTION ALGO SIGNAL]**"
     elif decision == "DOWN":
-        decision_banner = "🔴 **ACTION: DOWN (PUT) [ALGO SIGNAL]**"
+        decision_banner = "🔴 **ACTION: DOWN (PUT) [HIGH-CONVICTION ALGO SIGNAL]**"
 
     lines = [
-        "🏛️ **QUOTEX OTC ENTERPRISE RESEARCH REPORT**",
+        "🏛️ **QUOTEX OTC QUANTITATIVE RESEARCH REPORT**",
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
         f"💱 **Asset:** `{asset}` | **TF:** `{timeframe}`",
         f"📊 **Market Structure:** `{state}`",
-        f"⚙️ **Feed Stability:** `{quality}`",
+        f"⚙️ **Feed Quality:** `{quality}`",
         f"🧠 **Algorithmic Confidence:** `{score:.1f}%`",
         "",
         f"🚀 **Execution Decision:**\n{decision_banner}",
         "",
-        f"🎯 **Short-Term Trajectory:**\n{target}",
+        f"🎯 **5-7 Candle Trajectory Forecast:**\n{target}",
         "",
-        "🔬 **Granular Algorithmic Breakdown:**",
+        "🔬 **Granular Algorithmic & Price Action Breakdown:**",
         f"{reasoning}",
         "",
         f"⚠️ **Platform Risk Advisory:**\n{risk_advisory}",
@@ -339,7 +337,7 @@ def build_enterprise_telegram_report(data: Dict[str, Any], analysis_id: Optional
         lines.append("")
         lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         lines.append(f"📌 **Audit Reference ID:** `#{analysis_id}`")
-        lines.append("💡 *Log outcome instantly using buttons below:*")
+        lines.append("💡 *Log multi-candle outcome instantly using buttons below:*")
 
     return "\n".join(lines)
 
@@ -425,12 +423,12 @@ async def fetch_enterprise_statistics() -> Dict[str, Any]:
 async def cmd_start(message: Message):
     await log_audit_event(message.from_user.id, "command_start", "/start invoked")
     welcome_text = """
-🤖 **QUOTEX OTC ENTERPRISE RESEARCH BOT (v5.0 PHD EDITION)**
+🤖 **QUOTEX OTC QUANTITATIVE RESEARCH BOT (v6.0 PHD EDITION)**
 
-Built with absolute architectural depth to scan **Quotex synthetic price feeds, algorithmic loops, platform latency risks, and liquidity traps**.
+Engineered with elite institutional depth to scan **Quotex synthetic price feeds, multi-candle momentum waves (5-7 candles), algorithmic loops, and broker manipulation traps**.
 
 📸 **How to use:**
-Send a clean screenshot of your Quotex OTC chart. The engine will perform a full forensic scan of the underlying synthetic algorithm.
+Send a clean screenshot of your Quotex OTC chart. The engine will perform a rigorous forensic audit of the underlying algorithm.
 
 📋 **Core Commands:**
 • `/start` - Launch system interface
@@ -451,13 +449,13 @@ async def cmd_help(message: Message):
 📚 **ENTERPRISE COMMAND REFERENCE**
 
 • `/start` - Initial bot menu
-• `/status` - Check database WAL and polling status
+• `/status` - Check database and polling status
 • `/stats` - View global performance metrics and success rates
 • `/recent` - List last 10 analyzed charts
 • `/paper ID HORIZON RESULT` - Register test outcome
 
 **Accepted Outcomes:** `CORRECT` | `WRONG` | `NEUTRAL`
-*Example:* `/paper 45 1 CORRECT`
+*Example:* `/paper 45 5 CORRECT`
 """.strip()
     await message.answer(help_text)
 
@@ -471,11 +469,11 @@ async def cmd_status(message: Message):
         db_health = f"ERROR: {e}"
 
     status_report = (
-        "🟢 **ENTERPRISE SYSTEM STATUS REPORT**\n\n"
-        f"• Telegram Dispatcher: ACTIVE (Webhook/Polling Hybrid)\n"
-        f"• Vision Engine Model: `{GEMINI_MODEL}`\n"
+        "🟢 **QUANTITATIVE SYSTEM STATUS REPORT**\n\n"
+        f"• Telegram Dispatcher: ACTIVE (Long-Polling Engine)\n"
+        f"• Vision Model: `{GEMINI_MODEL}`\n"
         f"• Database Engine: {db_health}\n"
-        f"• Core Architecture: Quotex Algorithmic Forensic Suite\n"
+        f"• Core Architecture: Quotex Algorithmic Forensic Suite v6\n"
         f"• UTC Timestamp: {get_current_utc_iso()}"
     )
     await message.answer(status_report)
@@ -488,7 +486,7 @@ async def cmd_stats(message: Message):
 📈 **ENTERPRISE PRECISION METRICS**
 
 • Total Audited Charts: {stats['total_scans']}
-• Actionable Signals Generated: {stats['actionable_signals']}
+• Actionable High-Conviction Signals: {stats['actionable_signals']}
 • Filtered / Skipped Zones: {stats['skipped_zones']}
 
 📊 **Paper Validation Database:**
@@ -538,7 +536,7 @@ async def cmd_paper(message: Message):
         await message.answer(
             "❌ **Invalid Command Structure:**\n"
             "`/paper ID HORIZON RESULT`\n\n"
-            "*Example:* `/paper 12 1 CORRECT`\n"
+            "*Example:* `/paper 12 5 CORRECT`\n"
             "*Valid Results:* `CORRECT` / `WRONG` / `NEUTRAL`"
         )
         return
@@ -634,7 +632,7 @@ async def callback_paper_handler(callback: CallbackQuery):
 
 @dp.message(F.photo | F.document)
 async def handle_chart_image_upload(message: Message):
-    status_msg = await message.answer("🔄 **Executing Enterprise Forensic Audit...**\nAnalyzing synthetic price loops, algorithmic momentum, and lag/freeze risks.")
+    status_msg = await message.answer("🔄 **Executing Quantitative Forensic Audit...**\nDeconstructing synthetic price loops, multi-candle momentum waves, and manipulation risks.")
 
     try:
         file_id = None
@@ -723,9 +721,9 @@ async def handle_text_message_fallback(message: Message):
     if not txt:
         return
     if txt.lower() in {"hi", "hello", "hey", "salam"}:
-        await message.answer("👋 Hello! Send a Quotex OTC chart screenshot to run the enterprise algorithmic audit.")
+        await message.answer("👋 Hello! Send a Quotex OTC chart screenshot to run the quantitative algorithmic audit.")
         return
-    await message.answer("📸 Please send a clean screenshot of your Quotex OTC chart to initiate analysis, or type `/help` for guidance.")
+    await message.answer("📸 Please send a clean screenshot of your Quotex OTC chart to initiate multi-candle analysis, or type `/help` for guidance.")
 
 
 # ==============================================================================
@@ -744,7 +742,7 @@ async def global_dispatcher_error_handler(event):
 async def run_telegram_bot():
     initialize_enterprise_database()
     logger.info("==================================================")
-    logger.info("Quotex OTC Enterprise Research Bot Initialized (v5.0)")
+    logger.info("Quotex OTC Quantitative Research Bot Initialized (v6.0)")
     logger.info("Configured Gemini Model: %s", GEMINI_MODEL)
     logger.info("Active Database Target: %s", DB_FILE)
     logger.info("==================================================")
