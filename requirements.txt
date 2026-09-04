@@ -3,9 +3,10 @@ python-dotenv==1.0.0
 google-genai
 fastapi==0.104.1
 uvicorn==0.24.0
-numpy==1.24.3
-pandas==2.0.3
-opencv-python-headless==4.8.1.78
-pillow==10.1.0
-scipy==1.11.3
-setuptools>=65.0.0
+numpy>=1.26.4
+pandas>=2.1.4
+opencv-python-headless>=4.8.1.78
+pillow>=10.2.0
+scipy>=1.11.4
+setuptools>=69.0.0
+
