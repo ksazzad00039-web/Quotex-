@@ -1,12 +1,12 @@
-pip install
-aiogram 
-python-dotenv
-google-genai 
-fastapi 
-uvicorn 
-numpy 
-pandas
-encv-python 
-pillow 
-pytesseract 
-scipy
+# requirements.txt
+aiogram==3.4.1
+python-dotenv==1.0.0
+google-generativeai==0.3.2
+fastapi==0.104.1
+uvicorn==0.24.0
+numpy==1.24.3
+pandas==2.0.3
+opencv-python==4.8.1.78
+pillow==10.1.0
+pytesseract==0.3.10
+scipy==1.11.3
