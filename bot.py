@@ -1,5 +1,5 @@
 # ==============================================================================
-# QUOTEX OTC ENTERPRISE-GRADE MASTER ALGORITHMIC RESEARCH BOT (v5.0 PHD EDITION)
+# QUOTEX OTC ENTERPRISE-GRADE MASTER ALGORITHMIC RESEARCH BOT (RENDER WEB SERVICE EDITION)
 # ==============================================================================
 
 import os
@@ -19,6 +19,10 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, C
 from google import genai
 from google.genai import types
 
+# Render ওয়েব সার্ভিসের পোর্ট বাইন্ডিং পূরণের জন্য ফাস্টএপিআই ও উভিকর্ন
+from fastapi import FastAPI
+import uvicorn
+
 
 # ==============================================================================
 # SECTION 1: SYSTEM CONFIGURATION & ENVIRONMENT INITIALIZATION
@@ -31,6 +35,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 DB_FILE = os.getenv("DATABASE_FILE", "quotex_otc_enterprise_master.db")
+PORT = int(os.getenv("PORT", 10000))  # রেন্ডার থেকে ডায়নামিক পোর্ট নেবে
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 10MB Maximum Threshold
 
@@ -81,12 +86,19 @@ if not GEMINI_API_KEY:
 
 
 # ==============================================================================
-# SECTION 4: CLIENT & DISPATCHER INITIALIZATION
+# SECTION 4: CLIENT, DISPATCHER & FASTAPI WEB SERVER INITIALIZATION
 # ==============================================================================
 
 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()
+
+# Render পোর্ট ওপেন রাখার জন্য ফাস্টএপিআই ইনস্ট্যান্স
+app = FastAPI()
+
+@app.get("/")
+def health_check():
+    return {"status": "Quotex OTC Enterprise Bot is running live!", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 # ==============================================================================
@@ -216,7 +228,7 @@ You are an elite Chief Algorithmic Architect, Synthetic Market Forensic Speciali
 SYNTHETIC MARKET DECONSTRUCTION & BROKER ARCHITECTURE:
 - Quotex OTC feeds operate entirely on synthetic, mathematical generation algorithms managed by internal pseudo-random sequence engines and volatility distribution matrices.
 - There is zero true interbank liquidity, zero macroeconomic dependency, and zero physical order book depth. Price respects solely the mathematical geometry, support/resistance reaction limits, and cyclic reset points programmed by the platform architecture.
-- Market Phase Cycles: Price rotates through structured phases: Expansion (momentum momentum blocks) -> Exhaustion (wick rejections) -> Consolidation (artificial ranging boxes) -> Reset (abrupt directional inversion).
+- Market Phase Cycles: Price rotates through structured phases: Expansion (momentum blocks) -> Exhaustion (wick rejections) -> Consolidation (artificial ranging boxes) -> Reset (abrupt directional inversion).
 - Retail Traps & Manipulation Patterns: The algorithm purposefully generates fake breakouts past obvious swing highs/lows, traps breakout traders, induces false confidence via hammer/shooting star wicks, and induces micro-slippages near expiration boundaries.
 
 Perform an exhaustive forensic audit of the uploaded chart screenshot across these critical analytical dimensions:
@@ -460,7 +472,7 @@ async def cmd_status(message: Message):
 
     status_report = (
         "🟢 **ENTERPRISE SYSTEM STATUS REPORT**\n\n"
-        f"• Telegram Dispatcher: ACTIVE\n"
+        f"• Telegram Dispatcher: ACTIVE (Webhook/Polling Hybrid)\n"
         f"• Vision Engine Model: `{GEMINI_MODEL}`\n"
         f"• Database Engine: {db_health}\n"
         f"• Core Architecture: Quotex Algorithmic Forensic Suite\n"
@@ -726,24 +738,27 @@ async def global_dispatcher_error_handler(event):
 
 
 # ==============================================================================
-# SECTION 15: MAIN APPLICATION ENTRY POINT & LIFECYCLE MANAGEMENT
+# SECTION 15: BACKGROUND RUNNER & MAIN APPLICATION LIFECYCLE
 # ==============================================================================
 
-async def main():
+async def run_telegram_bot():
     initialize_enterprise_database()
-
     logger.info("==================================================")
     logger.info("Quotex OTC Enterprise Research Bot Initialized (v5.0)")
     logger.info("Configured Gemini Model: %s", GEMINI_MODEL)
     logger.info("Active Database Target: %s", DB_FILE)
     logger.info("==================================================")
-
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(run_telegram_bot())
 
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        uvicorn.run(app, host="0.0.0.0", port=PORT)
     except KeyboardInterrupt:
         logger.info("Enterprise Bot gracefully terminated via keyboard interrupt.")
+
