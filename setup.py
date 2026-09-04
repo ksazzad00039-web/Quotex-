@@ -1,0 +1,20 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="quotex_mastermind_bot",
+    version="9.0",
+    packages=find_packages(),
+    install_requires=[
+        "aiogram==3.4.1",
+        "python-dotenv==1.0.0",
+        "google-genai",
+        "fastapi==0.104.1",
+        "uvicorn==0.24.0",
+        "numpy==1.24.3",
+        "pandas==2.0.3",
+        "opencv-python-headless==4.8.1.78",
+        "pillow==10.1.0",
+        "scipy==1.11.3",
+        "setuptools>=65.0.0"
+    ],
+)
